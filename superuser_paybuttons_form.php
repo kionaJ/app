@@ -1,7 +1,4 @@
 <?php 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 include('login/includes/api.php');
 logged_in();
 include('functions.php');
@@ -11,40 +8,6 @@ allowedLevels("2");
 //////////////////////////////////////////////////////////////////
 //PAYBUTTON FORM
 //////////////////////////////////////////////////////////////////
-
-
-//make personal dir for club inside clubs_images folder added KFJ
-
-// Controleer of het formulier is verzonden
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
-    $file = $_FILES['image'];
-    $upload_dir = '/data/' . $superuser . 's_webshop/' . $superuser_id . '/';
-    $file_name = basename($file['name']);
-    $file_path = $upload_dir . $file_name;
-
-    // Zorg ervoor dat de upload directory bestaat
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
-    }
-
-    // Verplaats het geuploade bestand naar de gewenste directory
-    if (move_uploaded_file($file['tmp_name'], $file_path)) {
-        // Sla de bestandsnaam op in de database
-        $query = "UPDATE paybuttons_images SET filename = ? WHERE id = ?";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([$file_name, $button_id]);
-            echo "Fout bij het uploaden van het bestand.";
-
-    }
-}
-
-
-
-if (!is_dir('../data/' . $superuser . 's_webshop/'.$superuser_id)) {
-    mkdir('../data/' . $superuser . 's_webshop/'.$superuser_id, 0777, true);
-}
-// end added
 
 $subtype = "0";
 $alert = "0";
@@ -74,7 +37,7 @@ if($subtype == "3"){
 
 </style>
 <?php if($eventID == 0){ ?>
-<div align="center" class="titleunderbuttons">Beheer shop-items voor je shop</div><br>
+<div align="center" class="titleunderbuttons">Beheer Shop-items</div><br>
 <?php } ?>
 
 <?php if($alert <> "0"){ ?>
@@ -100,8 +63,7 @@ if($subtype == "3"){
 </ul>
 <?php } ?>
 
-<form id="AddOptionForm" method="post" enctype="multipart/form-data">
-	
+<form id="AddOptionForm">	
 		<?php
 		$sql_options = mysqli_query($con,"SELECT * FROM paybuttons_form WHERE " . $superuser . "_id = $superuser_id AND button_id = $button_id");
 				if(mysqli_num_rows($sql_options) > 0){
@@ -131,40 +93,7 @@ if($subtype == "3"){
 		}
 		?>
 			<label class="control-label">Geef <?php if(mysqli_num_rows($sql_options) > 0){ echo "nog"; } ?> een item in:</label>
-		 <div class="input-group">
-        <label class="control-label">Upload een afbeelding:</label>
-        <input type="file" name="image" class="form-control" required />
-        <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
-    // Verkrijg de afbeelding
-    $file = $_FILES['image'];
-    
-    // Bepaal de upload-directory (controleer of de map bestaat)
-    $upload_dir = '../data/' . $superuser . 's_webshop/' . $superuser_id . '/';
-    $file_name = basename($file['name']);
-    $file_path = $upload_dir . $file_name;
-
-    // Controleer of de upload directory bestaat, zo niet maak deze aan
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
-    }
-
-    // Verplaats het geüploade bestand naar de juiste directory
-    if (move_uploaded_file($file['tmp_name'], $file_path)) {
-        // Als het bestand succesvol is geüpload, sla de bestandsnaam op in de database
-        $query = "UPDATE paybuttons_images SET filename = ? WHERE id = ?";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([$file_name, $button_id]);
-        echo "Bestand succesvol geüpload en opgeslagen in de database.";
-    } else {
-        echo "Fout bij het uploaden van het bestand.";
-    }
-}
-?>
-
-    </div>
-    
-    
+		
 		<div class="input-group double-input">
 		    <input type="text" name="description" placeholder="Omschrijving" class="form-control" />
 		    <span class="input-group-addon" id="basic-addon3">&euro;</span>
