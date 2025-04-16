@@ -71,6 +71,10 @@ if($subtype == "3"){
 
 				<?php
 				while($row_options = mysqli_fetch_array($sql_options)){
+				if (!empty($row_options['image'])) {
+        echo "<img src='" . htmlspecialchars($row_options['image']) . "' alt='Afbeelding' style='max-width: 100px; margin-top: 10px;'>";
+    }    
+				    
 				if($row_options['exclusive'] == 0){
 					$subtype = "2";
 					}
@@ -98,6 +102,8 @@ if($subtype == "3"){
 		    <input type="text" name="description" placeholder="Omschrijving" class="form-control" />
 		    <span class="input-group-addon" id="basic-addon3">&euro;</span>
 		    <input type="text" name="amount" placeholder="Prijs" class="form-control" aria-describedby="basic-addon3"/>
+		        <input type="file" name="image" accept="image/*" class="form-control" style="margin-top: 10px;"/>
+
 		    <span class="input-group-btn">
 		        <button class="btn btn-success SubmitFormOption" type="submit" subtype_attr="<?php echo $subtype ?>"><span class="fa fa-plus"></span> <small>Voeg toe</small></button>
 		    </span>
@@ -136,6 +142,31 @@ if($subtype == "3"){
 
 
 <script type="text/javascript">
+
+$('.SubmitFormOption').on('click', function(e) {
+    console.log(e);
+    e.preventDefault();
+
+    var formData = new FormData($("#AddOptionForm")[0]); // Verzamel formulierdata inclusief bestand
+    formData.append("action", "AddFormOption");
+
+    var submiturl = "superuser_actions.php?get_<?php echo $superuser ?>_id=<?php echo $superuser_id ?>";
+
+    $.ajax({
+        type: "POST",
+        url: submiturl,
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(data) {
+            $('<?php echo $divtarget ?>').load("superuser_paybuttons_form.php?subcategory_id=<?php echo $subcategory_id ?>&get_<?php echo $superuser ?>_id=<?php echo $superuser_id ?>&button_id=<?php echo $button_id ?>");
+        },
+        error: function() {
+            alert("Er is een probleem opgetreden tijdens het uploaden van de afbeelding.");
+        }
+    });
+});
+
 	
 	$('.NextStep').hide();
 	$('.BackButtonPayButtonModal').hide();
