@@ -9,6 +9,69 @@ setlocale(LC_ALL, 'nl_NL');
 $eventID = 0;
 $string = "";
 
+//added KFJ limit shopitems
+// Controleer of de limiet is bereikt voor clubs op niveau 1
+if (is_allowedLevel("2")) {
+    $query = "SELECT COUNT(*) AS item_count FROM paybuttons WHERE " . $superuser . "_id = $superuser_id";
+    $result = mysqli_query($con, $query);
+    $row = mysqli_fetch_assoc($result);
+    $item_count = $row['item_count'];
+
+    if ($item_count >= 4 && !isset($_GET['button_id'])) { // Alleen nieuwe shop-items beperken
+        echo "<script>
+            notif({
+                msg: '<span class=\"fa fa-info-circle\"></span> Je hebt het maximum aantal van 4 shop-items bereikt. Upgrade je abonnement om meer items aan te maken.',
+                position: 'center',
+                type: 'info',
+                multiline: true,
+                width: 300,
+                autohide: false
+            });
+        </script>";
+        exit;
+    }
+}
+
+
+$superuser = "club";
+$query = "SELECT club_id FROM users WHERE club_id = $superuser_id LIMIT 1";
+$result = mysqli_query($con, $query);
+
+if (!$result) {
+    die("SQL-fout: " . mysqli_error($con));
+}
+
+$data = mysqli_fetch_assoc($result);
+if (!$data) {
+    die("Geen gebruiker gevonden met club_id $superuser_id.");
+}
+
+$club_id = $data['club_id'];
+// Haal de maximale limiet voor shopitems op
+$maxShopitems = checkPremiumLevel($superuser_id, $superuser, "max_shopitems");
+
+// Debug: toon de opgehaalde limiet voor shopitems
+// echo "Max shopitems limiet: $maxShopitems<br>";
+
+// Tel het aantal bestaande shopitems voor deze club
+$query = "SELECT COUNT(*) as aantal FROM paybuttons WHERE club_id = $club_id";
+$result = mysqli_query($con, $query);
+
+if ($result) {
+    $data = mysqli_fetch_assoc($result);
+    $aantalShopitems = (int) $data['aantal'];
+
+    // Debug: toon het aantal shopitems
+    // echo "Aantal shopitems: $aantalShopitems<br>";
+
+    // Controleer of het aantal shopitems de limiet heeft bereikt
+    if ($aantalShopitems >= $maxShopitems) {
+        die("Je hebt het maximum van $maxShopitems shopitems bereikt. Upgrade je abonnement om meer shopitems aan te maken.");
+    }
+} else {
+    die("Fout bij ophalen van aantal shopitems.");
+}
+// end added KFJ //
 //////////////////////////////////////////////////////////////////
 //INSERT OR EDIT A PAYBUTTON
 //////////////////////////////////////////////////////////////////
@@ -26,7 +89,6 @@ else {
 if (!is_dir('../data/' . $superuser . 's_webshop/'.$superuser_id)) {
     mkdir('../data/' . $superuser . 's_webshop/'.$superuser_id, 0777, true);
 }
-
 $button_id = 0;
 $title = "";
 $message = "";
@@ -40,7 +102,6 @@ $type = 0;
 
 if(isset($_GET['button_id']) && is_numeric($_GET['button_id']) && !empty($_GET['button_id']) && ($_GET['button_id']) <> 0){  
 	$button_id=mres($_GET['button_id']);
-
 	$sql_button = mysqli_query($con,"SELECT * FROM paybuttons WHERE " . $superuser . "_id = $superuser_id AND id = $button_id");
 	$row_button = mysqli_fetch_array($sql_button);
 	$title = $row_button['title'];
@@ -54,8 +115,6 @@ if(isset($_GET['button_id']) && is_numeric($_GET['button_id']) && !empty($_GET['
 	$type = $row_button['type'];
 }
 ?>
-
-
 <script>
 tinymce.remove("#message");
 tinymce.init({
@@ -105,8 +164,6 @@ if($button_id <> 0){ ?>
   </li>
 </ul>
 <?php } ?>
-
-
 		<div class="control-group">
 		    <label class="control-label">Korte titel van de knop *:</label> <?php echo helpPopup("titlepaybutton", "black", "question-circle", "info", "") ?>
 		    <div class="controls">
@@ -131,7 +188,6 @@ if($button_id <> 0){ ?>
 				echo "<strong>Selecteer hierboven een nieuwe afbeelding om deze te overschrijven.</strong><br>";
 				echo "<img height='120px;' src='/data/" . $superuser ."s_webshop/" . $superuser_id ."/" . $row_button['picture'] . "'>";
 				}
-				
 			}
 			?>
 			</div>
@@ -143,20 +199,17 @@ if($button_id <> 0){ ?>
 		      <p class="help-block" style="color: red"></p>
 		    </div>
 		</div>
-
 		<div class="control-group">
 			<label class="control-label">Startdatum shop-item *:</label> <?php echo helpPopup("whatstimeframepaybutton", "black", "question-circle", "info", "") ?>
 		    <div id="datepicker_start" data-date="<?php echo $startdate ?>"></div>
 			<input type="hidden" name="startdate" id="startdate" value="<?php echo $startdate ?>">
 			</div>
-
         <br>
 		<div class="control-group">
 			<label class="control-label">Einddatum betaling *:</label>
 		    <div id="datepicker_end" data-date="<?php echo $enddate ?>"></div>
 			<input type="hidden" name="enddate" id="enddate" value="<?php echo $enddate ?>">
 			</div>
-
         <br>
         <div class="control-group">
 		    <label class="control-label">Bedrag betaling *: </label>
@@ -170,7 +223,6 @@ if($button_id <> 0){ ?>
 			<br>
 		    </div>
         </div>   
-        
         <div class="payfixed" <?php if($paydynamic <> "0") { echo "style='display:none'"; } ?>>
 			<label class="control-label">Vast bedrag betaling (minimum 1 euro) *:</label> <?php echo helpPopup("whatsfee", "red", "exclamation-circle", "info", "") ?>
 			<div class="input-group">
@@ -419,10 +471,11 @@ if($button_id <> 0){ ?>
        </div>
        </div>
 
-
-
 <br>  
 <script type="text/javascript">
+
+
+
 var ListSubcategories = "";
 var id_list_kids = "";
 var id_list_adults = "";
@@ -480,7 +533,6 @@ $(".paydynamic").on('change', function() {
             $('.NextStep').show();  
        }
 	}); 
-	
 
 //go back if event_id = 0 (if event_id <> 0 there is button in clubs_calendar_include)
 $(".PayButtonDetails").on('click', function() {
@@ -513,11 +565,35 @@ $('#datepicker_end').on('changeDate', function() {
         $('#datepicker_end').datepicker('getFormattedDate')
     );
 });
-	
 
 //save buton
 $(document).off('click','.SaveButton').on("click",".SaveButton",function(e) {
 e.preventDefault();
+
+// Controleer shop-item limiet
+    $.ajax({
+        url: 'check_shop_item_limit.php', // Endpoint voor controle
+        method: 'POST',
+        data: { superuser_id: '<?php echo $superuser_id; ?>' },
+        success: function (response) {
+            if (response.limit_reached) {
+                notif({
+                    msg: '<span class="fa fa-info-circle"></span> Je hebt het maximum aantal van 4 shop-items bereikt. Upgrade je abonnement om meer items aan te maken.',
+                    position: 'center',
+                    type: 'info',
+                    multiline: true,
+                    width: 300,
+                    autohide: false
+                });
+                return false;
+            } else {
+                // Voer opslaan functionaliteit uit
+                // Bestaande code blijft hier
+            }
+        }
+    });
+});
+
 
 	var title = $('#title').val();
 	if (title.length > 0)
@@ -607,7 +683,6 @@ $("#images").fileinput({
     uploadIcon: "<i class=\"glyphicon glyphicon-upload\"></i> ",
     uploadUrl: "superuser_actions.php?action=CreatePayButtonNew&subcategory_id=<?php echo $subcategory_id ?>&get_<?php echo $superuser ?>_id=<?php echo $superuser_id ?>",
 
-
     uploadExtraData: function() {
         return {
             title: $("#title").val(),
@@ -661,10 +736,4 @@ $("#images").fileinput({
     
 		tinymce.remove("#message");
 });
-
-	
-	
-
 	</script>
-		
-	   
