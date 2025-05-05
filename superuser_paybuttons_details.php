@@ -176,9 +176,14 @@ if(mysqli_num_rows($check_payed) > 0){
 <head>
 <?php include("header.php") ?>
 <style>
+.product-image {
+  float: left;
+  width: 15%;
+}
+
 .product-details {
   float: left;
-  width: 66%;
+  width: 51%;
 }
  
 .product-price {
@@ -304,22 +309,25 @@ if(mysqli_num_rows($check_payed) > 0){
   .column-labels {
     display: none;
   }
-
+    .product-image {
+      float: left;
+      width: 15%;
+    }
   .product-details {
-    float: none;
+    float: left;
     margin-bottom: 10px;
-    width: auto;
+    width: 40%;
   }
  
   .product-price {
     /*clear: both;*/
     /*width: 50px;*/
-    width: 33%;
+    width: 17%;
   }
  
   .product-quantity {
     /*width: 100px;*/
-    width: 33%;
+    width: 15%;
   }
   .product-quantity input {
 	margin-top: -22px;
@@ -334,7 +342,7 @@ if(mysqli_num_rows($check_payed) > 0){
   .product-line-price {
     float: right;
     /*width: 70px;*/
-    width: 70px;
+    width: 13%;
   }
 }
 .hero img{max-height: 350px; width: 100%;}
@@ -408,11 +416,11 @@ $enddate_format = "" . formatDate($row_button['enddate'], "EEEE dd MMMM");
     </div>
     <?php } else { ?>
         <!-- Als er geen afbeelding is, toon de avatar via de showAvatarSuper functie -->
-        <?php showAvatarSuper($superuser_id, $superuser, "media-picture-avatar"); ?>
+        <?php showAvatarSuper($superuser_id, $superuser, "avatar-smaller"); ?>
 
     </div>
 <?php } ?>
-<div style="background-color: transparent">
+<div class="media container" style="background-color: transparent">
 			<?php 
 			if(isset ($action) && $action == "success"){
 			?>
@@ -546,9 +554,10 @@ $enddate_format = "" . formatDate($row_button['enddate'], "EEEE dd MMMM");
 					<input type="hidden" name="order_id" value="<?php echo $prem_order_id ?>">
 				<div class="shopping-cart">
 				  <div class="column-labels">
+				    <label class="product-image">Afbeelding</label>
 				    <label class="product-details">Omschrijving</label>
-				    <label class="product-quantity">Aantal</label>
 				    <label class="product-price">Prijs</label>
+				    <label class="product-quantity">Aantal</label>
 				    <label class="product-line-price">Totaal</label>
 				  </div>
 				<?php
@@ -556,15 +565,24 @@ $enddate_format = "" . formatDate($row_button['enddate'], "EEEE dd MMMM");
 				 
 				  <input type="hidden" name="id[]" value="<?php echo $row_options['id'] ?>">
 				  <input type="hidden" name="amount[]" value="<?php echo $row_options['amount'] ?>">
-				  <div class="product">
+                	<div class="product">
+                		<!--added KFJ -->
+				    <div class="product-image" style="text-align: left;">
+                        <?php if (!empty($row_options['image'])): ?>
+                            <img src="<?php echo $row_options['image']; ?>" alt="Afbeelding" width="50" style="float: left; margin-right: 10px;">
+                        <?php else: ?>
+                            <!-- Als er geen afbeelding is, toon de avatar via de showAvatarSuper functie -->
+                            <?php showAvatarSuper($superuser_id, $superuser, "avatar-smaller"); ?>
+                            <?php endif; ?>
+                    </div>
+                    <!--end added KFJ -->
 				    <div class="product-details">
 				      <div class="product-title"><?php echo $row_options['description'] ?></div>
-				      
-				    </div><div class="product-quantity">
-				      <input type="number" name="quantity[]" value="0" min="0">
 				    </div>
 				    <div class="product-price"><?php echo $row_options['amount'] ?></div>
-				    
+				    <div class="product-quantity">
+				      <input type="number" name="quantity[]" value="0" min="0">
+				    </div>
 				    <div class="product-line-price">0</div>
 				  </div>
 				
@@ -608,9 +626,9 @@ if(!isset($action)){
 if($type == 0){ 
 //show testpayment if 11513
 if(($superuser == "club" && $superuser_id == "11513")){ ?>
-<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post" id="paypal<?php echo $button_id ?>">
+<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" class="media container" method="post" id="paypal<?php echo $button_id ?>">
 <?php } else { ?>
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post" id="paypal<?php echo $button_id ?>">
+<form action="https://www.paypal.com/cgi-bin/webscr" class="media container" method="post" id="paypal<?php echo $button_id ?>">
 <?php } 
 
 if($row_button['paydynamic'] == 0){
@@ -639,31 +657,36 @@ if($row_button['paydynamic'] == 2){
 if($row_button['paydynamic'] == 3){
 	?>
 <label class="control-label">Prijs:</label>
-<select name="amount" id="amountoptions" class="form-control">
-	<option value="0">Selecteer:</option>
-	<?php $sql_op = mysqli_query($con, "SELECT * FROM paybuttons_form WHERE " . $superuser . "_id = $superuser_id AND button_id = $button_id AND archive = 0 AND exclusive = 1");
-		if(mysqli_num_rows($sql_op) > 0){
-			while($row_op = mysqli_fetch_array($sql_op)){
-				echo "<option value=\"$row_op[amount]\"> " . $row_op['description'] . " (". $row_op['amount'] . " euro)</option>";
-			}
-		}
-		?>
+<select name="amount" id="amountoptions" class="form-control custom-select">
+    <option value="0">Selecteer:</option>
+    <?php
+    $sql_op = mysqli_query($con, "SELECT * FROM paybuttons_form WHERE " . $superuser . "_id = $superuser_id AND button_id = $button_id AND archive = 0 AND exclusive = 1");
+    if (mysqli_num_rows($sql_op) > 0) {
+        while ($row_op = mysqli_fetch_array($sql_op)) {
+            $image = $row_op['image'];
+            $description = $row_op['description'];
+            $amount = $row_op['amount'];
+            echo "<option value=\"$amount\" data-img=\"$image\">$description (€$amount)</option>";
+        }
+    }
+    ?>
 </select>
+<div id="preview" style="margin-top: 10px;"></div>
 <br>
 	<?php
 }
 ?>
 <input type="hidden" id="paydynamic" name="paydynamic" value="<?php echo $row_button['paydynamic'] ?>">
-<div class="control-group">
+<div class="control-group media container">
     <label class="control-label"><input type="hidden" name="on1" value="Opmerkingen" maxlength="200">Opmerkingen voor <?php echo userValueSuper($superuser_id,$superuser,"username") ?>:</label>
     <div class="controls">
 	  <input type="text" name="os1" class="form-control">
     </div>
 </div>
-<div  class="shop-paybutton gray">
+<div  class="shop-paybutton gray media container">
     <table width="100%" class="table-calendar">
         <tbody>
-<tr><td class="shop-paybutton gray"><span class="fa fa-info-circle fa-fw"></span></td><td  class="shop-paybutton gray"> Disclaimer: Na klikken op de shop-item word je verwezen naar een externe betaalpagina, waar je de betaling kan voldoen.</td></tr></tbody></table></div><br>
+<tr><td class="shop-paybutton gray"><span class="fa fa-info-circle fa-fw"></span></td><td  class="shop-paybutton gray"> Disclaimer: Na klikken op dit shop-item word je verwezen naar een externe betaalpagina, waar je de betaling kan voldoen.</td></tr></tbody></table></div><br>
 <!-- Identify your business so that you can collect the payments. -->
 <input type="hidden" name="business" value="<?php echo userValueSuper($superuser_id,$superuser,"paypal_id") ?>">
 
@@ -691,7 +714,7 @@ if($row_button['paydynamic'] == 3){
 <?php if($test == "1"){ ?>
 <button class="btn btn-success btn-block" disabled><span class="fab fa-paypal"></span> Betaal</button>
 <div style="color:red; font-size: smaller" align="center">
-  deze shop-item is inactief (dit is een testpagina).
+  shop-item is inactief (dit is een testpagina).
 </div>
 <?php } else { ?> 
 <button type="submit" class="btn btn-success btn-block TriggerForm" <?php if(($row_button['paydynamic'] == 2) || ($row_button['paydynamic'] == 3)) { echo "disabled"; } ?>><span class="fab fa-paypal"></span> Betaal</button>
@@ -717,7 +740,7 @@ if(($payed == "0") && ($test == "0")){ ?>
 //MOLLIE
 if($type == 1){
  ?>
- <form action="<?php echo $full_path ?>/plugins/mollie2/examples/payments/create-payment-oauth.php" method="post" id="<?php echo $button_id ?>">
+ <form action="<?php echo $full_path ?>/plugins/mollie2/examples/payments/create-payment-oauth.php" class="media container" method="post" id="<?php echo $button_id ?>">
 
 <?php
 if($row_button['paydynamic'] == 0){
@@ -766,7 +789,7 @@ if($row_button['paydynamic'] == 3){
     <div class="controls">
 	  <input type="text" name="comments" class="form-control">
     </div>
- <tr><td class="shop-paybutton gray"><span class="fa fa-info-circle fa-fw"></span></td><td  class="shop-paybutton gray"> Disclaimer: Na klikken op de shop-item word je verwezen naar een externe betaalpagina, waar je de betaling kan voldoen.</td></tr>   
+ <tr><td class="shop-paybutton gray"><span class="fa fa-info-circle fa-fw"></span></td><td  class="shop-paybutton gray"> Disclaimer: Na klikken op dit shop-item word je verwezen naar een externe betaalpagina, waar je de betaling kan voldoen.</td></tr>   
 </div>
 <br>
 <input type="hidden" name="button_id" value="<?php echo $button_id ?>">
@@ -780,7 +803,7 @@ if($row_button['paydynamic'] == 3){
 <?php if($test == "1"){ ?>
 <button class="btn btn-success btn-block" disabled><span class="fa fa-credit-card fa-fw"></span> Betaal</button>
 <div style="color:red; font-size: smaller" align="center">
-    deze shop-item is inactief (dit is een testpagina).
+    shop-item is inactief (dit is een testpagina).
 </div>
 <?php } else { ?> 
 <button type="submit" class="btn btn-success btn-block TriggerForm" <?php if(($row_button['paydynamic'] == 2) || ($row_button['paydynamic'] == 3)) { echo "disabled"; } ?>><span class="fa fa-credit-card fa-fw"></span>  Betaal</button>
@@ -817,7 +840,7 @@ Opmerking: Je betaalt voor <?php echo $for ?>
 	  <li class="media">
 	    <div class="media-left"><span class="fa fa-exclamation-triangle fa-lg bg-icons bg-color-3 icon-circle"></span></div>
 	    <div class="media-body">
-	      Deze shop-item is niet meer geldig
+	      Dit shop-item is niet meer geldig
 	      </div>
 	</div>
 	  </li>
@@ -827,6 +850,19 @@ Opmerking: Je betaalt voor <?php echo $for ?>
 	?>
 
 <script type="text/javascript">
+document.getElementById('amountoptions').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const image = selected.getAttribute('data-img');
+    const preview = document.getElementById('preview');
+    
+    if (image) {
+        preview.innerHTML = `<img src="${image}" alt="Afbeelding" style="max-width: 150px; display: block; margin-top: 5px;">`;
+    } else {
+        preview.innerHTML = '';
+    }
+});
+
+
 	
 	$(document).ready(function(){
     
@@ -1065,12 +1101,6 @@ function updateQuantity(quantityInput)
     <button type="button" class="btn btn-secondary" onclick="window.history.back();">
         Sluit
     </button>
-</div>
-
-<div align="center">
-    <ul class="nav navbar-nav navbar-center cl-effect-11">
-						<li><a href="<?php echo $full_path ?>/index.php" data-hover="Start">Start</a></li>
-					</ul>	
 </div>
 <?php include("footer.php") ?>
 </body>
